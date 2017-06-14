@@ -1,31 +1,33 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- * @flow
- */
+import React, { Component } from "react";
+import { AppRegistry, StyleSheet, Text, View } from "react-native";
 
-import React, { Component } from 'react';
-import {
-  AppRegistry,
-  StyleSheet,
-  Text,
-  View
-} from 'react-native';
+import MapView, { PROVIDER_GOOGLE } from 'react-native-maps'
+// import MapStyle from "./mapstyle.json";
 
 export default class screens extends Component {
+  state = {
+    items: [
+      
+    ],
+    region: {
+      latitude: 45.522954,
+      longitude: -122.6699177,
+      latitudeDelta: 0.0922,
+      longitudeDelta: 0.0421,
+    },
+  };
+
+  onRegionChange = (region) => {
+    this.setState({ region });
+  }
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.welcome}>
-          Welcome to React Native!
-        </Text>
-        <Text style={styles.instructions}>
-          To get started, edit index.ios.js
-        </Text>
-        <Text style={styles.instructions}>
-          Press Cmd+R to reload,{'\n'}
-          Cmd+D or shake for dev menu
-        </Text>
+        <MapView 
+          region={this.state.region} 
+          onRegionChange={this.onRegionChange} 
+          style={styles.container}
+        />
       </View>
     );
   }
@@ -34,20 +36,7 @@ export default class screens extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
   },
 });
 
-AppRegistry.registerComponent('screens', () => screens);
+AppRegistry.registerComponent("screens", () => screens);
