@@ -7,15 +7,16 @@ import {
   ScrollView,
   Animated,
   Image,
-  Dimensions,
+  Dimensions
 } from "react-native";
 
 import MapView, { PROVIDER_GOOGLE } from "react-native-maps";
-// import MapStyle from "./mapstyle.json";
-
 import WonderWoman from "./wonderwoman.jpg";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
+
+const CARD_HEIGHT = height / 4;
+const CARD_WIDTH = CARD_HEIGHT - 50;
 
 export default class screens extends Component {
   state = {
@@ -66,21 +67,41 @@ export default class screens extends Component {
   };
 
   componentWillMount() {
+    this.index = 0;
     this.animation = new Animated.Value(0);
   }
+  componentDidMount() {
+    // We should detect when scrolling has stopped then animate
+    // We should just debounce the event listener here
+    this.animation.addListener(({ value }) => {
+      let index = Math.floor( ((value) / CARD_WIDTH) + .3) // animate 30% away from landing on the next item
+      if (index >= this.state.markers.length) {
+        index = this.state.markers.length - 1;
+      } if (index <= 0) {
+        index = 0;
+      }
 
-  onRegionChange = region => {
-    this.setState({ region });
-  };
-  handleScroll = e => {
-    console.log(e.nativeEvent.contentOffset.x);
-  };
+      clearTimeout(this.regionTimeout);
+      this.regionTimeout = setTimeout(() => {
+        if (this.index !== index) {
+          this.index = index;
+          const { coordinate } = this.state.markers[index];
+          this.map.animateToRegion({
+            ...coordinate,
+            latitudeDelta: this.state.region.latitudeDelta,
+            longitudeDelta: this.state.region.longitudeDelta,
+          }, 350);
+        }
+      }, 10)
+    });
+  }
+
   render() {
     const interpolations = this.state.markers.map((marker, index) => {
       const inputRange = [
-        (index - 1) * 200,
-        index * 200,
-        (index + 1) * 200 + 1,
+        (index - 1) * CARD_WIDTH,
+        index * CARD_WIDTH,
+        (index + 1) * CARD_WIDTH + 1,
       ]
       const scale = this.animation.interpolate({
         inputRange,
@@ -98,8 +119,8 @@ export default class screens extends Component {
     return (
       <View style={styles.container}>
         <MapView
-          region={this.state.region}
-          onRegionChange={this.onRegionChange}
+          ref={(map) => this.map = map}
+          initialRegion={this.state.region}
           style={styles.container}
         >
           {this.state.markers.map((marker, index) => {
@@ -123,11 +144,11 @@ export default class screens extends Component {
             );
           })}
         </MapView>
-        <ScrollView
+        <Animated.ScrollView
           horizontal
           scrollEventThrottle={16}
           showsHorizontalScrollIndicator={false}
-          snapToInterval={200}
+          snapToInterval={CARD_WIDTH}
           onScroll={Animated.event([
             {
               nativeEvent: {
@@ -136,7 +157,8 @@ export default class screens extends Component {
                 },
               },
             },
-          ])}
+            
+          ],{ useNativeDriver: true })}
           style={styles.scrollView}
           contentContainerStyle={styles.endPadding}
         >
@@ -155,7 +177,7 @@ export default class screens extends Component {
               </View>
             </View>
           ))}
-        </ScrollView>
+        </Animated.ScrollView>
       </View>
     );
   }
@@ -173,7 +195,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   endPadding: {
-    paddingRight: 200,
+    paddingRight: width - CARD_WIDTH,
   },
   card: {
     padding: 10,
@@ -184,8 +206,8 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     shadowOpacity: 0.3,
     shadowOffset: { x: 2, y: -2 },
-    height: 250,
-    width: 200,
+    height: CARD_HEIGHT,
+    width: CARD_WIDTH,
   },
   cardImage: {
     maxWidth: "100%",
@@ -196,10 +218,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardtitle: {
-    marginTop: 10,
+    fontSize: 12,
+    marginTop: 5,
     fontWeight: "bold",
   },
   cardDescription: {
+    fontSize: 12,
     color: "#444",
   },
   markerWrap: {
