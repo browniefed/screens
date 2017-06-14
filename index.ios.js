@@ -220,7 +220,8 @@ export default class screens extends Component {
                       duration: 250,
                     }),
                   ]).start(() => {
-                    this.opacityAnimation.setValue(1);
+                    this.opacityAnimation.setValue(1); // THIS SHOULD BE INTERPOLATED IN RENDER!
+                    // However we'd need to setState with all the bounding box data :(
                     this.setState({
                       overlayImage: false,
                     });
@@ -367,9 +368,6 @@ export default class screens extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  hide: {
-    opacity: 0,
   },
   transitionContainer: {
     backgroundColor: "#FFF",
